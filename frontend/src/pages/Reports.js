@@ -217,7 +217,7 @@ ORDER BY employee_count DESC;`
               <div className="export-card-actions">
                 <a
                   className="btn btn-primary"
-                  href={`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/assets?export=xlsx`}
+                  href={`${process.env.REACT_APP_API_URL || "https://ems-backend-60cl.onrender.com/api"}/assets?export=xlsx`}
                   download="asset-report.xlsx"
                   id="export-assets-xlsx"
                   style={{ textDecoration: "none", display: "inline-block", textAlign: "center" }}
@@ -226,7 +226,7 @@ ORDER BY employee_count DESC;`
                 </a>
                 <a
                   className="btn btn-outline"
-                  href={`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/assets?export=csv`}
+                  href={`${process.env.REACT_APP_API_URL || "https://ems-backend-60cl.onrender.com/api"}/assets?export=csv`}
                   download="asset-report.csv"
                   id="export-assets-csv"
                   style={{ textDecoration: "none", display: "inline-block", textAlign: "center" }}
