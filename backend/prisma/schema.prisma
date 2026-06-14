@@ -1,0 +1,238 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                Int              @id @default(autoincrement())
+  name              String
+  email             String           @unique
+  password          String
+  role              String           @default("user")
+  verified          Boolean          @default(false)
+  verificationToken String?          @map("verification_token")
+  lastLogin         DateTime?        @map("last_login")
+  refreshTokens     RefreshToken[]
+  passwordResets    PasswordReset[]
+  employeeProfile   EmployeeProfile?
+  approvals         ApprovalHistory[]
+  auditLogs         AuditLog[]
+  notifications     Notification[]
+  assetAllocations  AssetAllocation[] @relation("AllocatedByUser")
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id      Int    @id @default(autoincrement())
+  userId  Int    @map("user_id")
+  token   String @unique
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset")
+}
+
+model Department {
+  id               Int               @id @default(autoincrement())
+  departmentName   String            @map("department_name")
+  employeeProfiles EmployeeProfile[]
+
+  @@map("departments")
+}
+
+model EmployeeProfile {
+  id               Int                @id @default(autoincrement())
+  userId           Int                @unique @map("user_id")
+  departmentId     Int                @map("department_id")
+  phone            String             @db.VarChar(20)
+  address          String             @db.Text
+  designation      String             @db.VarChar(100)
+  salary           Decimal            @db.Decimal(10, 2)
+  createdAt        DateTime           @default(now()) @map("created_at")
+
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department       Department         @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  images           EmployeeImage[]
+  skills           EmployeeSkill[]
+  leaveBalances    LeaveBalance[]
+  leaveApplications LeaveApplication[]
+  assetAllocations  AssetAllocation[]
+
+  @@map("employee_profiles")
+}
+
+model EmployeeImage {
+  id         Int             @id @default(autoincrement())
+  employeeId Int             @map("employee_id")
+  imageUrl   String          @map("image_url")
+  employee   EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_images")
+}
+
+model Skill {
+  id             Int             @id @default(autoincrement())
+  skillName      String          @map("skill_name")
+  employeeSkills EmployeeSkill[]
+
+  @@map("skills")
+}
+
+model EmployeeSkill {
+  id         Int             @id @default(autoincrement())
+  employeeId Int             @map("employee_id")
+  skillId    Int             @map("skill_id")
+  employee   EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  skill      Skill           @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@map("employee_skills")
+}
+
+model LeaveType {
+  id                Int                @id @default(autoincrement())
+  leaveName         String             @map("leave_name") @db.VarChar(100)
+  totalDays         Int                @map("total_days")
+  leaveBalances     LeaveBalance[]
+  leaveApplications LeaveApplication[]
+
+  @@map("leave_types")
+}
+
+model LeaveBalance {
+  id            Int             @id @default(autoincrement())
+  employeeId    Int             @map("employee_id")
+  leaveTypeId   Int             @map("leave_type_id")
+  availableDays Int             @map("available_days")
+
+  employee      EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType     LeaveType       @relation(fields: [leaveTypeId], references: [id], onDelete: Cascade)
+
+  @@map("leave_balance")
+}
+
+model LeaveApplication {
+  id           Int               @id @default(autoincrement())
+  employeeId   Int               @map("employee_id")
+  leaveTypeId  Int               @map("leave_type_id")
+  fromDate     DateTime          @map("from_date")
+  toDate       DateTime          @map("to_date")
+  totalDays    Int               @map("total_days")
+  reason       String            @db.Text
+  status       String            @map("status") @db.VarChar(30)
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  employee      EmployeeProfile   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType     LeaveType         @relation(fields: [leaveTypeId], references: [id], onDelete: Cascade)
+  approvalHistories ApprovalHistory[]
+
+  @@map("leave_applications")
+}
+
+model ApprovalHistory {
+  id          Int              @id @default(autoincrement())
+  leaveId     Int              @map("leave_id")
+  approvedBy  Int              @map("approved_by")
+  action      String           @db.VarChar(50)
+  remarks     String?          @db.Text
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  leaveApplication LeaveApplication @relation(fields: [leaveId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [approvedBy], references: [id], onDelete: Cascade)
+
+  @@map("approval_history")
+}
+
+// ─── ASSET MANAGEMENT ─────────────────────────────────────────────────────────
+
+model Asset {
+  id           Int               @id @default(autoincrement())
+  assetCode    String            @unique @map("asset_code") @db.VarChar(50)
+  assetName    String            @map("asset_name") @db.VarChar(200)
+  assetType    String            @map("asset_type") @db.VarChar(100)
+  purchaseDate DateTime?         @map("purchase_date") @db.Date
+  purchaseCost Decimal?          @map("purchase_cost") @db.Decimal(12, 2)
+  status       String            @default("AVAILABLE") @db.VarChar(50)
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  allocations  AssetAllocation[]
+  history      AssetHistory[]
+
+  @@map("assets")
+}
+
+model AssetAllocation {
+  id            Int             @id @default(autoincrement())
+  assetId       Int             @map("asset_id")
+  employeeId    Int             @map("employee_id")
+  allocatedBy   Int             @map("allocated_by")
+  allocatedDate DateTime        @default(now()) @map("allocated_date")
+  returnDate    DateTime?       @map("return_date")
+  status        String          @default("ACTIVE") @db.VarChar(50)
+
+  asset         Asset           @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  employee      EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  allocatedByUser User          @relation("AllocatedByUser", fields: [allocatedBy], references: [id], onDelete: Cascade)
+
+  @@map("asset_allocations")
+}
+
+model AssetHistory {
+  id        Int      @id @default(autoincrement())
+  assetId   Int      @map("asset_id")
+  action    String   @db.VarChar(100)
+  remarks   String?  @db.Text
+  createdBy Int      @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@map("asset_history")
+}
+
+// ─── NOTIFICATION ENGINE ───────────────────────────────────────────────────────
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  title     String   @db.VarChar(200)
+  message   String   @db.Text
+  eventType String   @default("GENERAL") @map("event_type") @db.VarChar(100)
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// ─── ENHANCED AUDIT LOG (JSONB) ────────────────────────────────────────────────
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  tableName   String   @map("table_name") @db.VarChar(100)
+  actionType  String   @map("action_type") @db.VarChar(50)
+  recordId    Int?     @map("record_id")
+  oldData     Json?    @map("old_data")
+  newData     Json?    @map("new_data")
+  performedBy Int      @map("performed_by")
+  details     String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user        User     @relation(fields: [performedBy], references: [id], onDelete: Cascade)
+
+  @@map("audit_logs")
+}
