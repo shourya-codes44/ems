@@ -5,6 +5,9 @@ import Card from "../components/common/Card";
 import Loader from "../components/common/Loader";
 import Button from "../components/common/Button";
 
+const rawApiUrl = process.env.REACT_APP_API_URL || "https://ems-backend-60cl.onrender.com/api";
+const API_URL = rawApiUrl.endsWith("/api") ? rawApiUrl : `${rawApiUrl.replace(/\/$/, "")}/api`;
+
 export function Reports({ showToast }) {
   const [activeTab, setActiveTab] = useState("hr"); // hr, sandbox, export
   const [hrData, setHrData] = useState(null);
@@ -217,7 +220,7 @@ ORDER BY employee_count DESC;`
               <div className="export-card-actions">
                 <a
                   className="btn btn-primary"
-                  href={`${process.env.REACT_APP_API_URL || "https://ems-backend-60cl.onrender.com/api"}/assets?export=xlsx`}
+                  href={`${API_URL}/assets?export=xlsx`}
                   download="asset-report.xlsx"
                   id="export-assets-xlsx"
                   style={{ textDecoration: "none", display: "inline-block", textAlign: "center" }}
@@ -226,7 +229,7 @@ ORDER BY employee_count DESC;`
                 </a>
                 <a
                   className="btn btn-outline"
-                  href={`${process.env.REACT_APP_API_URL || "https://ems-backend-60cl.onrender.com/api"}/assets?export=csv`}
+                  href={`${API_URL}/assets?export=csv`}
                   download="asset-report.csv"
                   id="export-assets-csv"
                   style={{ textDecoration: "none", display: "inline-block", textAlign: "center" }}
