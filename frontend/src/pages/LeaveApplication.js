@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
 import useLeave from "../hooks/useLeave";
 import Card from "../components/common/Card";
 import Table from "../components/common/Table";
@@ -8,7 +7,6 @@ import Modal from "../components/common/Modal";
 import Loader from "../components/common/Loader";
 
 export function LeaveApplication({ showToast }) {
-  const { user } = useSelector((state) => state.auth);
   const {
     balances,
     leaves,

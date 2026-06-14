@@ -13,7 +13,7 @@ function EmployeeList({ showToast }) {
   // SQL Join overlay state
   const [showJoins, setShowJoins] = useState(false);
   const [joinsData, setJoinsData] = useState(null);
-  const [joinsLoading, setJoinsLoading] = useState(false);
+  const [, setJoinsLoading] = useState(false);
 
   const fetchEmployees = async () => {
     try {
@@ -29,6 +29,7 @@ function EmployeeList({ showToast }) {
 
   useEffect(() => {
     fetchEmployees();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFetchJoins = async () => {
